@@ -1,0 +1,3 @@
+from .mailing_handlers import register_mailing_handlers
+from .admin_start_hadnlers import register_main_admin_handlers
+from .new_coach_handlers import register_new_coach_handlers
