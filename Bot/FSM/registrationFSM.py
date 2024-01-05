@@ -5,6 +5,7 @@ class RegistrationFSM(StatesGroup):
     user_type_state = State()
     name_state = State()
     phone_number_state = State()
+    age_state = State()
     weight_state = State()
 
     token_state = State()

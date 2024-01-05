@@ -26,17 +26,17 @@ class DataBase:
         '''Check if user is already in the db'''
 
         with self.con.cursor() as cur:
-            cur.execute("""SELECT `user_id` FROM `users` WHERE `user_id` = %s""", (str(user_id),))
+            cur.execute("""SELECT * FROM `users` WHERE `user_id` = %s""", (str(user_id),))
             
             return cur.fetchone() # if result is empty, func will return false
-
     
-    def add_user(self, user_id: int, phone_number: str, weight: float, full_name: str) -> None:
+    
+    def add_user(self, user_id: int, phone_number: str, weight: float, full_name: str, age: int) -> None:
         '''Add user(buyer) in the db'''
         with self.con.cursor() as cur:
             cur.execute(
-                'INSERT INTO `users` (user_id, phone_number, weight, full_name) VALUES(%s, %s, %s, %s)',
-                (user_id, phone_number, weight, full_name)
+                'INSERT INTO `users` (user_id, phone_number, weight, full_name, age) VALUES(%s, %s, %s, %s, %s)',
+                (user_id, phone_number, weight, full_name, age)
             )
             self.commit()
     
@@ -88,7 +88,7 @@ class DataBase:
     def get_coaches(self, all: bool, recomm: str = '') -> list:
         with self.con.cursor() as cur:
             cur.execute(
-                'SELECT `full_name`, `exp`, `specialization`, `photo` FROM `coaches`'
+                'SELECT `id`, `user_id`, `full_name`, `exp`, `specialization`, `photo` FROM `coaches`'
             )
         fetch = cur.fetchall()
         res = []
@@ -105,7 +105,8 @@ class DataBase:
                         if spec in rec:
                             if coach not in res:
                                 res.append(coach)
-        return res 
+        return res
+
 
     def commit(self) -> None:
         '''Saving changes in the db'''

@@ -38,9 +38,15 @@ async def get_wrong_phone_number(message: types.Message):
     await message.answer('Неверно указан номер телефона попробуйте еще раз')
 
 
+async def ask_age(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        await RegistrationFSM.next()
+        data['phone_number'] = message.text
+        await message.answer('Теперь пришлите свой возраст')
+
 async def ask_weight(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['phone_number'] = message.text
+        data['age'] = message.text
     await RegistrationFSM.next()
     await message.answer(
         'Хорошо. Теперь пришлите свой вес с точностью до десятых килограмма(пример: 75.6)'
@@ -59,7 +65,8 @@ async def finish_registration(message: types.Message, state: FSMContext):
             data['user_id'],
             data['phone_number'],
             data['weight'],
-            data['full_name']
+            data['full_name'],
+            data['age']
         )
         await message.answer(
             '''Вы успешно зарегистрировались в телеграмм-бот нашего Фитнес-клуба
@@ -93,7 +100,8 @@ async def init_coach(message: types.Message, state: FSMContext):
 def register_registration_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(ask_full_name, Text('ВОЙТИ КАК ПОСЕТИТЕЛЬ'), state=RegistrationFSM.user_type_state)
     dp.register_message_handler(ask_phone_number, state=RegistrationFSM.name_state)
-    dp.register_message_handler(ask_weight, lambda message: check_number(message), state=RegistrationFSM.phone_number_state)
+    dp.register_message_handler(ask_weight, state=RegistrationFSM.age_state)
+    dp.register_message_handler(ask_age, lambda message: check_number(message), state=RegistrationFSM.phone_number_state)
     dp.register_message_handler(get_wrong_phone_number, state=RegistrationFSM.phone_number_state)
     dp.register_message_handler(finish_registration, state=RegistrationFSM.weight_state)
     dp.register_message_handler(ask_token, Text('ВОЙТИ КАК ТРЕНЕР'), state=RegistrationFSM.user_type_state)

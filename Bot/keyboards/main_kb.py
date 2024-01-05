@@ -10,6 +10,7 @@ def get_main_kb(user_id: int) -> ReplyKeyboardMarkup:
     main_kb = ReplyKeyboardMarkup(resize_keyboard=True)
     if user_id in db.get_coach_id_list():
         edit_bt = KeyboardButton('ИЗМЕНИТЬ ПАРАМЕТРЫ ПРОФИЛЯ⚙')
+        client_con_br = KeyboardButton('СВЯЗЬ С КЛИЕНТАМИ')
         main_kb.add(edit_bt)
     else:
         make_train_bt = KeyboardButton('ЗАПИСАТЬСЯ НА ТРЕНИРОВКУ📝')

@@ -1,9 +1,10 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher.storage import FSMContext
 
 from create_bot import db
 from FSM import ChooseCoachFSM
-from keyboards import get_main_choose_coach_kb
+from keyboards import get_main_choose_coach_kb, get_choose_coach_kb
 from utils import get_coach_descr
 
 
@@ -22,7 +23,8 @@ async def full_list_of_coaches(message: types.Message):
     [
         await message.answer_photo(
             coach['photo'],
-            get_coach_descr(coach)
+            get_coach_descr(coach),
+            reply_markup=get_choose_coach_kb(coach['user_id'])
         )
         for coach in db.get_coaches(True)
     ]
@@ -34,13 +36,45 @@ async def recomended_coaches(message: types.Message):
         [
             await message.answer_photo(
                 coach['photo'],
-                get_coach_descr(coach)
+                get_coach_descr(coach),
+                reply_markup=get_choose_coach_kb(coach['user_id'])
             )
             for coach in coaches
         ]
     else:
         await message.answer('''Не удалось ничего найти по вашему запросу,
 убедитесь, что указано всё правильно или добавьте ещё специализаций'''
+        )
+
+
+async def ask_message_to_coach(callback: types.CallbackQuery, state: FSMContext):
+    async with state.proxy() as data:
+        data['coach'] = callback.data.split('_')[1]
+    await callback.message.answer(
+        '''Теперь напишите сообщение, которое хотите оставить в заявке к тренеру.
+Осталвяя заявку, вы даёте согласие на то, что вашие данные будут переданы тренеры(ФИО, вес и возраст)
+'''
+)
+
+
+async def create_training(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        user = db.check_user_exists(message.from_user.id)
+        await message.bot.send_message(
+            data['coach'],
+            f'''
+Вам новая заявка от {user['full_name']}\n\n
+Текст заявки:\n{message.text}\n\n
+Возраст: {user['age']}\n
+Вес: {user['weight']}\n\n
+Для общения с клиентом нажмите на кнопку "СВЯЗЬ С КЛИЕНТАМИ" и выберите данного человека.
+'''
+        )
+        await state.finish()
+        await message.answer(
+            '''Ваша заявка успешно передана тренеру, как только тренер прочтёт вашу заявку и ответит
+на неё, мы сообщим вам. Также вы можете написать ещё сообщений тренеру во вкладке "СВЯЗЬ С ТРЕНЕРОМ"
+'''
         )
 
 
